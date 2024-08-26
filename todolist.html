@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="./todolist.css" />
+    <script
+      src="https://kit.fontawesome.com/1ad8277d24.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <button id="add_task_button">Add task</button>
+
+    <!-- todo undsen heseg -->
+    <div class="container">
+      <div class="box_container">
+        <div class="title">
+          <div class="white circle"></div>
+          <div class="box_head">To do</div>
+        </div>
+        <div class="tasks_container" id="todo_tasks_container">
+          <button class="editbuttono"></button>
+          <button class="zuru"></button>
+        </div>
+      </div>
+
+      <div class="box_container">
+        <div class="title">
+          <div class="yellow circle"></div>
+          <div class="box_head">In progress</div>
+        </div>
+        <div class="tasks_container" id="inprogress_tasks_container">
+          <button editbutton="editbutton"></button>
+        </div>
+      </div>
+      <div class="box_container">
+        <div class="title">
+          <div class="green circle"></div>
+          <div class="box_head">Done</div>
+        </div>
+        <div class="tasks_container" id="done_tasks_container">
+          <button editbutton="editbutton"></button>
+        </div>
+      </div>
+      <div class="box_container">
+        <div class="title">
+          <div class="redd circle"></div>
+          <div class="box_head">Blocked</div>
+        </div>
+        <div class="tasks_container" id="blocked_tasks_container">
+          <button editbutton="editbutton"></button>
+        </div>
+      </div>
+    </div>
+    <!-- dialog heseg -->
+    <div class="dialog_container">
+      <div class="dialog">
+        <h1>Task</h1>
+        <input id="input_element" type="text" />
+        <select name="" id="select_status">
+          <option value="todo">todo</option>
+          <option value="inProgress">inProgress</option>
+          <option value="done">done</option>
+          <option value="blocked">blocked</option>
+        </select>
+        <button id="submit_button">Submit</button>
+      </div>
+    </div>
+    <script src="todolist.js"></script>
+  </body>
+</html>
