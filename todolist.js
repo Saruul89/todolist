@@ -38,6 +38,7 @@ let todos = [
   },
 ];
 
+// DOM Element Selection
 const todoTasksContainer = document.getElementById("todo_tasks_container");
 const inProgressTasksContainer = document.getElementById(
   "inprogress_tasks_container"
@@ -48,113 +49,145 @@ const blockedTasksContainer = document.getElementById(
 );
 const addTaskButton = document.getElementById("add_task_button");
 const submitButton = document.getElementById("submit_button");
-const dialogContainer = document.querySelector("div.dialog_container");
+const dialogContainer = document.querySelector(".dialog_container");
 const inputElement = document.getElementById("input_element");
 const selectElement = document.getElementById("select_status");
 
-//code dund ashiglah huvisagchud
-let isCreatingTask = false;
-let taskId = 0;
+// State Management
+let isEditingTask = false;
+let currentTaskId = null;
 
+// Render Task HTML
+function createTaskHTML(task) {
+  return `
+    <div class="task" data-id="${task.id}">
+      <p>${task.text}</p>
+      <div class="task-actions">
+        <i onclick="editTask(${task.id})" class="fa-solid fa-pencil"></i>
+        <i onclick="removeTask(${task.id})" class="fa-solid fa-trash red"></i>
+      </div>
+    </div>
+  `;
+}
+
+// Render Todo App
 function renderTodoApp() {
-  let todoTasks = ``;
-  let inProgessTasks = ``;
-  let doneTasks = ``;
-  let blockedTasks = ``;
+  const tasksByStatus = {
+    [STATUSES.TODO]: [],
+    [STATUSES.INPROGRESS]: [],
+    [STATUSES.DONE]: [],
+    [STATUSES.BLOCKED]: [],
+  };
 
-  for (let i = 0; i < todos.length; i++) {
-    if (todos[i].status === STATUSES.TODO) {
-      todoTasks += `<div class="task">
-                    <p>${todos[i].text}</p>
-                    <i onclick="editTask(${todos[i].id})" class="fa-solid fa-pencil"></i>
-                    <i onclick="removeTask(${todos[i].id})" class="fa-solid fa-trash red"></i>
-                  </div>`;
-    }
-    if (todos[i].status === STATUSES.INPROGRESS) {
-      inProgessTasks += `<div class="task">
-                    <p>${todos[i].text}</p>
-                      <i onclick="editTask(${todos[i].id})" class="fa-solid fa-pencil"></i>
-                    <i onclick="removeTask(${todos[i].id})" class="fa-solid fa-trash red"></i>
-            
-                  </div>`;
-    }
-    if (todos[i].status === STATUSES.DONE) {
-      doneTasks += `<div class="task">
-                    <p>${todos[i].text}</p>
-                   <i onclick="editTask(${todos[i].id})" class="fa-solid fa-pencil"></i>
-                    <i onclick="removeTask(${todos[i].id})" class="fa-solid fa-trash red"></i>
-                  </div>`;
-    }
-    if (todos[i].status === STATUSES.BLOCKED) {
-      blockedTasks += `<div class="task">
-                    <p>${todos[i].text}</p>
-                    <i onclick="editTask(${todos[i].id})" class="fa-solid fa-pencil"></i>
-                    <i onclick="removeTask(${todos[i].id})" class="fa-solid fa-trash red"></i>
-                  </div>`;
-    }
-  }
+  // Organize tasks by status
+  todos.forEach((todo) => {
+    tasksByStatus[todo.status].push(todo);
+  });
 
-  todoTasksContainer.innerHTML = todoTasks;
-  inProgressTasksContainer.innerHTML = inProgessTasks;
-  doneTasksContainer.innerHTML = doneTasks;
-  blockedTasksContainer.innerHTML = blockedTasks;
+  // Render tasks in respective containers
+  todoTasksContainer.innerHTML = tasksByStatus[STATUSES.TODO]
+    .map(createTaskHTML)
+    .join("");
+  inProgressTasksContainer.innerHTML = tasksByStatus[STATUSES.INPROGRESS]
+    .map(createTaskHTML)
+    .join("");
+  doneTasksContainer.innerHTML = tasksByStatus[STATUSES.DONE]
+    .map(createTaskHTML)
+    .join("");
+  blockedTasksContainer.innerHTML = tasksByStatus[STATUSES.BLOCKED]
+    .map(createTaskHTML)
+    .join("");
+
+  // Reset dialog and state
+  resetDialog();
+}
+
+// Reset Dialog
+function resetDialog() {
   inputElement.value = "";
-  selectElement.value = "";
-  taskId = 0;
-  isCreatingTask = false;
-}
-
-renderTodoApp();
-
-addTaskButton.addEventListener("click", addTask);
-submitButton.addEventListener("click", submit);
-function addTask() {
-  isCreatingTask = true;
-  dialogContainer.classList.add("flex");
-}
-
-function submit() {
-  if (isCreatingTask) {
-    todos.push({
-      text: inputElement.value,
-      status: selectElement.value,
-      id: randomIntFromInterval(),
-    });
-  } else {
-    for (let i = 0; i < todos.length; i++) {
-      if (todos[i].id === taskId) {
-        todos[i].text = inputElement.value;
-        todos[i].status = selectElement.value;
-      }
-    }
-  }
-
-  renderTodoApp();
+  selectElement.value = STATUSES.TODO;
+  isEditingTask = false;
+  currentTaskId = null;
   dialogContainer.classList.remove("flex");
 }
 
-function removeTask(id) {
-  let filteredTodo = [];
-  for (let i = 0; i < todos.length; i++) {
-    if (todos[i].id !== id) {
-      filteredTodo.push(todos[i]);
-    }
-  }
-  todos = filteredTodo;
-  renderTodoApp();
-}
-
-function editTask(id) {
-  for (let i = 0; i < todos.length; i++) {
-    if (todos[i].id === id) {
-      inputElement.value = todos[i].text;
-      selectElement.value = todos[i].status;
-    }
-  }
-  taskId = id;
+// Add Task Button Handler
+function addTask() {
+  resetDialog();
   dialogContainer.classList.add("flex");
 }
 
-function randomIntFromInterval() {
-  return Math.floor(Math.random() * 1000);
+// Submit Task
+function submit() {
+  const taskText = inputElement.value.trim();
+
+  // Validate input
+  if (!taskText) {
+    alert("Task text cannot be empty!");
+    return;
+  }
+
+  if (isEditingTask && currentTaskId !== null) {
+    // Edit existing task
+    todos = todos.map((todo) =>
+      todo.id === currentTaskId
+        ? { ...todo, text: taskText, status: selectElement.value }
+        : todo
+    );
+  } else {
+    // Add new task
+    todos.push({
+      id: generateUniqueId(),
+      text: taskText,
+      status: selectElement.value,
+    });
+  }
+
+  renderTodoApp();
 }
+
+// Remove Task
+function removeTask(id) {
+  todos = todos.filter((todo) => todo.id !== id);
+  renderTodoApp();
+}
+
+// Edit Task
+function editTask(id) {
+  const taskToEdit = todos.find((todo) => todo.id === id);
+
+  if (taskToEdit) {
+    inputElement.value = taskToEdit.text;
+    selectElement.value = taskToEdit.status;
+    currentTaskId = id;
+    isEditingTask = true;
+    dialogContainer.classList.add("flex");
+  }
+}
+
+// Generate Unique ID
+function generateUniqueId() {
+  return Date.now() + Math.floor(Math.random() * 1000);
+}
+
+// Event Listeners
+function initializeEventListeners() {
+  addTaskButton.addEventListener("click", addTask);
+  submitButton.addEventListener("click", submit);
+
+  // Close dialog when clicking outside
+  dialogContainer.addEventListener("click", (e) => {
+    if (e.target === dialogContainer) {
+      resetDialog();
+    }
+  });
+}
+
+// Initialize App
+function initApp() {
+  renderTodoApp();
+  initializeEventListeners();
+}
+
+// Start the application
+initApp();
